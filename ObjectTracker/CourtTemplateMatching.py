@@ -79,7 +79,9 @@ def courtBoundingBox():
          court bounding box and a cv2 image with bounding quadrilateral contours in the frame as an overlay
     """
     quadrilaterals, img = extractQuadrilaterals()
-    # TODO: implement quadrilateral matching to determine bounds of court
+
+    # for contour in quadrilaterals:
+
     return img
 
 
