@@ -1,5 +1,9 @@
 # Badminton Match Analysis
 
+## System Requirements
+- Python 3.7
+- OpenCV2
+
 The objective of this project is to detect the most common form of winning a badminton match in the 2020 Olympics.
 
 The ways a player can lose a round is through the following:
