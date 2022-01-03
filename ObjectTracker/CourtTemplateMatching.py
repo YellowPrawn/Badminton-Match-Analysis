@@ -65,9 +65,7 @@ def extractQuadrilaterals():
 
 
 def courtBoundingBox():
-    """ Using quadrilaterals in frame, determine bounds of the court by searching for at least 2 matching squares which
-    define corners of the court. Other bounds can be determined by propagating lines according to official badminton
-    court guidelines
+    """ Using quadrilaterals in frame, determine bounds of the court
 
     :return
          court bounding box and a cv2 image with bounding quadrilateral contours in the frame as an overlay
@@ -75,39 +73,24 @@ def courtBoundingBox():
     quadrilaterals, img = extractQuadrilaterals()
 
     for i in quadrilaterals:
-        similar = similarContours(i, quadrilaterals)
-        if len(similar) == 2:
-            _, _, w, h = cv2.boundingRect(i)
-            print(verifyDistance(similar[0], similar[1], w, h))
-            cv2.drawContours(img, similar, -1, (255, 0, 0), 5, lineType=cv2.LINE_AA)
+        _, _, w, h = cv2.boundingRect(i)
+        for j in quadrilaterals:
+            if verifyDistance(i, j, w, h) and verifyArea(i, j):
+                cv2.drawContours(img, [i, j], -1, (255, 0, 0), 1, lineType=cv2.LINE_AA)
     return img
 
 
-def similarContours(c, contours):
-    """ Using the height and width of a contour, find all contours in the given list of contours that are similar to
-    the given contour
+def verifyArea(c1, c2):  # TODO: tune this
+    """ Verifies that two contours have approximately the same area
 
-    :param c: A contour to find
-    :param contours: List of contours
-
-    :return
-        List of similar contours
+    :param c1: A contour
+    :param c2: A contour
+    :return: A boolean statement (true: similar size)
     """
-    threshhold = 0.50  # margin of error
-    matching = []
-    _, _, wi, hi = cv2.boundingRect(c)
-    areai = cv2.contourArea(c)
-    try:
-        # TODO: fix similarity determination
-        extenti = wi * hi / areai
-        for j in contours:
-            _, _, wj, hj = cv2.boundingRect(j)
-            print("break")
-            if wj - (wj * threshhold) <= wi <= wj + (wj * threshhold):
-                matching.append(j)
-    except ZeroDivisionError:
-        pass
-    return matching
+    threshold = 0.3
+    a1 = cv2.contourArea(c1)
+    a2 = cv2.contourArea(c2)
+    return a1 - a1 * threshold <= a2 <= a1 + a1 * threshold
 
 
 def verifyDistance(c1, c2, w, h):
@@ -134,10 +117,10 @@ def verifyDistance(c1, c2, w, h):
 
     if t1 == l:
         # this means camera is pointing perpendicular to the net
-        return checkDoubleServiceLine(t1, t2, w) and not checkSinglesSideline(t, b, h)
+        return not checkDoubleServiceLine(t1, t2, w) and checkSinglesSideline(t, b, h)
     else:
         # this means camera is pointing parallel to the net
-        return checkDoubleServiceLine(t1, t2, h) and not checkSinglesSideline(l, r, h)
+        return not checkDoubleServiceLine(t1, t2, h) and checkSinglesSideline(l, r, h)
 
 
 def findSmallerSet(a1, a2, b1, b2):
@@ -186,13 +169,14 @@ def checkDoubleServiceLine(t1, t2, length):
     :return
         A boolean statement (true: appropriate distancing, false: inappropriate distancing)
     """
+    threshold = 0.03
     # standardize l to official size then multiply by distance between service lines to find expected distance between
     # bounding quadrilaterals
-    expectedDistance = (length / 0.76) * 11.88
+    expectedDistance = (length / 69.57011) * 792.5579
 
     # find distance between t1 and t2
-    realDistance = math.sqrt(((t1[0] - t2[0]) ^ 2) + ((t1[1] - t2[1]) ^ 2))
-    return round(expectedDistance) == round(realDistance)
+    realDistance = math.sqrt(abs(((t1[0] - t2[0]) ^ 2) + ((t1[1] - t2[1]) ^ 2)))
+    return realDistance - realDistance * threshold <= expectedDistance <= realDistance + realDistance * threshold
 
 
 def checkSinglesSideline(t1, t2, length):
@@ -209,14 +193,15 @@ def checkSinglesSideline(t1, t2, length):
     :return
         A boolean statement (true: appropriate distancing, false: inappropriate distancing)
     """
+    threshold = 0.03
     # standardize l to official size then multiply by distance between sidelines to find expected distance between
     # bounding quadrilaterals
-    expectedDistance = (length / 0.46) * 5.18
+    expectedDistance = (length / 141) * 1696
 
     # find distance between t1 and t2
-    realDistance = math.sqrt((t1[0] - t2[0]) ^ 2 + (t1[1] - t2[1]) ^ 2)
+    realDistance = math.sqrt(abs((t1[0] - t2[0]) ^ 2) + abs((t1[1] - t2[1]) ^ 2))
 
-    return round(expectedDistance) == round(realDistance)
+    return realDistance - realDistance * threshold <= expectedDistance <= realDistance + realDistance * threshold
 
 
 def transformFrame():
