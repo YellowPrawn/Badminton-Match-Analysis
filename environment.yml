@@ -1,0 +1,10 @@
+name: badminton-match-analysis
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python
+  - opencv
+  - numpy
+  - matplotlib
+prefix: /Users/damienfung/miniforge3/envs/badminton-match-analysis

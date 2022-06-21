@@ -1,8 +1,10 @@
 # Badminton Match Analysis
 
 ## System Requirements
-- Python 3.7
-- OpenCV2
+- Python 3.10.4
+- OpenCV2 4.5.5
+- Numpy 1.21.5
+- Matplotlib 3.5.1
 
 ## Description
 The objective of this project is to detect the most common form of winning a badminton match in the 2020 Olympics.
@@ -19,3 +21,8 @@ The former can be determined by:
 3. Transforming the image such that the badminton court is in a standardized, flat plane
 4. Detecting the location of the shuttlecock (with respect to the classifications listed in the above)
 
+## Usage
+Using conda, activate the conda environment with 
+`conda env create --file environment.yml`
+To deactivate the environment and return to your base environment, use 
+`conda deactivate`
