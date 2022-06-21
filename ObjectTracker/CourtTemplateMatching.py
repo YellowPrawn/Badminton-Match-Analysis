@@ -10,12 +10,12 @@ def featureHomography(frame):
         frame: the frame to be matched
     
     Returns: 
-        img2: the frame that was matched
-        kp2: key points used to match
-        good: points that match the template
+        [np.int32(dst)]: list of points describing the court
+        img2: the original frame
+        img3: the processed frame
+        
 
     """
-
     MIN_MATCH_COUNT = 10
     img1 = cv.imread("template.png",0) # queryImage
     img2 = cv.imread(frame, 0) # trainImage
@@ -43,7 +43,7 @@ def featureHomography(frame):
         h,w = img1.shape
         pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
         dst = cv.perspectiveTransform(pts,M)
-        img2 = cv.polylines(img2,[np.int32(dst)],True,255,3, cv.LINE_AA)
+        img2 = cv.polylines(img2,[np.int32(dst)],True,0,3, cv.LINE_AA)
     else:
         print( "Not enough matches are found - {}/{}".format(len(good), MIN_MATCH_COUNT) )
         matchesMask = None
@@ -53,9 +53,28 @@ def featureHomography(frame):
                     matchesMask = matchesMask, # draw only inliers
                     flags = 2)
     img3 = cv.drawMatches(img1,kp1,img2,kp2,good,None,**draw_params)
-    plt.imshow(img3, 'gray'),plt.show()
-    return img2,kp2,good
+    return np.int32(dst), img2, img3
 
+def cropImage(pts, img):
+    """ Crops image with the court's bounding box (based on https://stackoverflow.com/a/48301735)
 
+    Args: 
+        pts: a list of points that describe the court
+        img: the frame to be processed
+    
+    Returns: an image
+    """
+    ## (1) Crop the bounding rects
+    rect = cv.boundingRect(pts)
+    x,y,w,h = rect
+    cropped = img[y:y+h, x:x+w].copy()
 
-featureHomography("test.png")
+    # TODO: perspective transform image to further crop
+
+    scale = 1 / 4
+    (HEIGHT, WIDTH) = img.shape[:2]
+    cv.imshow("dst2", cv.resize(cropped, (int(WIDTH * scale), int(HEIGHT * scale))))
+
+dst, img2, img3 = featureHomography("test.png")
+cropImage(dst, img2)
+plt.imshow(img3, 'gray'),plt.show()
